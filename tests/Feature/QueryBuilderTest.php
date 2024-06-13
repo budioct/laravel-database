@@ -756,5 +756,50 @@ class QueryBuilderTest extends TestCase
 
     }
 
+    /**
+     * Query Builder Aggregate
+     * ● Query Builder juga mendukung untuk melakukan Aggregate Query, kita bisa menggunakan
+     * method :
+     * ● count(column)      untuk jumlah data
+     * ● min(column)        untuk minimal data
+     * ● max(column)        untuk maksimal data
+     * ● avg(column)        untuk rata-rata data
+     * ● sum(column)        untuk menjumlahkan data
+     */
+
+    public function testAggregate(){
+
+        $this->insertTableProduct();
+
+        // note hasil bukan collection, jadi kita bisa olah datanya
+
+        // sql: select count(`id`) as aggregate from `products`
+        $result = DB::table("products")->count("id");
+        self::assertEquals(2, $result);
+        var_dump($result); // int(2)
+
+        // sql: select min(`price`) as aggregate from `products`
+        $result = DB::table("products")->min("price");
+        self::assertEquals(90000, $result);
+        var_dump($result); // int(90000)
+
+        // sql: select max(`price`) as aggregate from `products`
+        $result = DB::table("products")->max("price");
+        self::assertEquals(100000, $result);
+        var_dump($result); // int(100000)
+
+        // sql: select avg(`price`) as aggregate from `products`
+        $result = DB::table("products")->avg("price");
+        self::assertEquals(95000, $result);
+        var_dump($result); // string(10) "95000.0000"
+
+        // sql: select sum(`price`) as aggregate from `products`
+        $result = DB::table("products")->sum("price");
+        self::assertEquals(190000, $result);
+        var_dump($result); // string(6) "190000"
+
+
+    }
+
 
 }
