@@ -1,0 +1,24 @@
+<?php
+
+namespace Tests\Feature;
+
+use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Foundation\Testing\WithFaker;
+use Tests\TestCase;
+
+class DatabaseCommandTest extends TestCase
+{
+
+    /**
+     * Database Commands
+     * ● Artisan file di laravel memiliki banyak sekali fitur, salah satunya adalah perintah db
+     * ● Ada banyak sekali perintah db yang bisa kita gunakan
+     * ● php artisan db, untuk mengakses terminal database, misal mysql
+     * ● php artisan db:table, untuk melihat seluruh table di database
+     * ● php artisan db:show, untuk melihat informasi database
+     * ● php artisan db:monitor, untuk memonitor jumlah koneksi di database
+     * ● php artisan db:seed, untuk menambah data di database
+     * ● php artisan db:wipe, untuk menghapus seluruh table di database
+     */
+
+}
