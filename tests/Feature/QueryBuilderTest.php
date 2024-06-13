@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use Illuminate\Database\Query\Builder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Foundation\Testing\WithFaker;
 use Illuminate\Support\Facades\DB;
@@ -39,6 +40,7 @@ class QueryBuilderTest extends TestCase
     public function testQueryBuilderInsert(){
 
         // DB::table("nama_table")->insert(["key" => value]) // key adalah nama column dan value ada isi data record
+        // sql: select count(id) as total from categories
         DB::table("categories")->insert([
             "id" => "SANDAL",
             "name" => "Consina",
@@ -75,6 +77,7 @@ class QueryBuilderTest extends TestCase
         $this->testQueryBuilderInsert(); //insert data
 
         // DB::table("nama_table")->select([column_table])->get();
+        // sql: select `id`, `name` from `categories`
         // untuk eksekusi query ada beberapa method get() ambil semua, first() ambil data pertama,   pluck() ambil beberpa data
         $collection = DB::table("categories")
             ->select(["id", "name"])
@@ -87,5 +90,176 @@ class QueryBuilderTest extends TestCase
         });
 
     }
+
+    public function testInsertDataCategories(){
+
+        DB::table("categories")->insert([
+            "id" => "SANDAL",
+            "name" => "Sandal",
+            "description" => "",
+            "created_at" => "2024-06-13 10:10:10"
+        ]);
+        DB::table("categories")->insert([
+            "id" => "JAKET",
+            "name" => "Jaket",
+            "description" => "",
+            "created_at" => "2024-06-13 10:10:10"
+        ]);
+        DB::table("categories")->insert([
+            "id" => "TOPI",
+            "name" => "Topi",
+            "description" => "",
+            "created_at" => "2024-06-13 10:10:10"
+        ]);
+        DB::table("categories")->insert([
+            "id" => "CELANA",
+            "name" => "Celana",
+            "description" => "",
+            "created_at" => "2024-06-13 10:10:10"
+        ]);
+    }
+
+    /**
+     * Query Builder Where
+     * ● Sebelum kita lanjut ke materi Update dan Delete, kita harus tahu tentang Where di Query Builder
+     * ● Untuk menambahkan Where di Query Builder, kita bisa menggunakan banyak sekali method
+     *   dengan awalan where…()
+     *
+     * Where Method                                 Keterangan
+     * where(column, operator, value)               AND column operator value
+     * where([condition1, condition2])              AND (condition 1 AND condition 2 AND …)
+     * where(callback(Builder))                     AND (condition)
+     * orWhere(column, operator, value)             OR (condition)
+     * orWhere(callback(Builder))                   OR (condition …)
+     * whereNot(callback(Builder))                  NOT (condition …)
+     */
+
+    public function testWhere(){
+
+        $this->testInsertDataCategories();
+
+        // DB::table("nama_table")->where(callback(Builder))->get(); // select where bisa di dalam callback
+        // sql: select * from `categories` where (`id` = ? or `id` = ?)
+        $collection = DB::table("categories")->where(function(Builder $builder){
+            $builder->where('id', '=', 'SANDAL');
+            $builder->orWhere('id', '=', 'JAKET');
+            // select * from categories where(id = SANDAL OR id = JAKET) // sql db
+        })->get();
+
+        self::assertCount(2, $collection);
+
+        $collection->each(function ($item){
+            Log::info(json_encode($item));
+        });
+
+        var_dump($collection);
+
+    }
+
+    /**
+     *  Where Between Method
+     *  Where Method                                 Keterangan
+     *  whereBetween(column, [value1, value2])       WHERE column BETWEEN value1 AND value2
+     *  whereNotBetween(column, [value1,value2])     WHERE column NOT BETWEEN value1 AND value2
+     */
+
+    public function testWhereBetween(){
+
+        $this->testInsertDataCategories();
+
+        // DB::table("nama_table")->whereBetween(column, [record_column, record_column])->get(); // mengambil data dalam jangka waktu
+        // sql: select * from `categories` where `created_at` between ? and ?
+        $collection = DB::table("categories")
+            ->whereBetween("created_at", ["2024-05-13 10:10:10", "2024-07-13 10:10:10"])
+            ->get();
+
+        self::assertCount(4, $collection);
+        $collection->each(function ($item){
+            Log::info(json_encode($item));
+        });
+
+        var_dump($collection);
+
+    }
+
+    /**
+     *   Where In Method
+     *   Where Method                                 Keterangan
+     *   whereIn(column, [array])                     WHERE column IN (array)
+     *   whereNotIn(column, [array])                  WHERE column NOT IN (array)
+     */
+    public function testWhereIn(){
+
+        $this->testInsertDataCategories();
+
+        // DB::table("nama_table")->whereIn(column_table, ["record_column"])->get(); // select where id tertentu
+        // sql: select * from `categories` where `id` in (?, ?)
+        $collection = DB::table("categories")->
+        whereIn("id", ["CELANA", "JAKET"])
+            ->get();
+
+        self::assertCount(2, $collection);
+
+        $collection->each(function ($item){
+            Log::info(json_encode($item));
+        });
+
+        var_dump($collection);
+
+    }
+
+    /**
+     *    Where Null Method
+     *    Where Method                                 Keterangan
+     *    whereNull(column)                            WHERE column IS NULL
+     *    whereNotNull(column)                         WHERE column IS NOT NULL
+     */
+    public function testWhereNull(){
+
+        $this->testInsertDataCategories();
+
+        // DB::table("nama_table")->whereNull(column)->get(); // mengambil data yang column record nya null
+        // sql: select * from `categories` where `description` is null
+        $collection = DB::table("categories")
+            ->whereNull("description")
+            ->get();
+
+        self::assertCount(0, $collection);
+        $collection->each(function ($item){
+            Log::info(json_encode($item));
+        });
+
+        var_dump($collection);
+
+    }
+
+    /**
+     *     Where Date Method
+     *     Where Method                                 Keterangan
+     *     whereDate(column, value)                     WHERE DATE(column) = value
+     *     whereMonth(column, value)                    WHERE MONTH(column) = value
+     *     whereDay(column, value)                      WHERE DAY(column) = value
+     *     whereYear(column, value)                     WHERE YEAR(column) = value
+     *     whereTime(column, value)                     WHERE TIME(column) = value
+     */
+    public function testWhereDate(){
+
+        $this->testInsertDataCategories();
+
+        // DB::table("nama_table")->whereNull(column)->get(); // mengambil data berdasarkan colum date
+        // sql: select * from `categories` where date(`created_at`) = ?
+        $collection = DB::table("categories")
+            ->whereDate("created_at", "2024-06-13")
+            ->get();
+
+        self::assertCount(4, $collection);
+        $collection->each(function ($item){
+            Log::info(json_encode($item));
+        });
+
+        var_dump($collection);
+
+    }
+
 
 }
