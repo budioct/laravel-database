@@ -356,5 +356,34 @@ class QueryBuilderTest extends TestCase
 
     }
 
+    /**
+     * Query Builder Delete
+     * ● Untuk melakukan delete, kita bisa menggunakan method
+     * ● delete() untuk melakukan Sql DELETE, dan
+     * ● truncate() untuk melakukan TRUNCATE table
+     */
+
+    public function testQueryBuilderDelete(){
+
+        $this->testInsertDataCategories();
+
+        // sql: delete from `categories` where `id` = ?
+        DB::table("categories")
+            ->where("id", "=", "CELANA")
+            ->delete();
+
+        // sql: select * from `categories` where `id` = ?
+        $collection = DB::table("categories")
+            ->where("id", "=", "CELANA")
+            ->get();
+
+        self::assertCount(0, $collection);
+        $collection->each(function ($item){
+            Log::info(json_encode($item));
+        });
+
+        var_dump($collection);
+
+    }
 
 }
