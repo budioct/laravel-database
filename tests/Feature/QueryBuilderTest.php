@@ -492,5 +492,44 @@ class QueryBuilderTest extends TestCase
 
     }
 
+    /**
+     * Query Builder Paging
+     * ● Untuk melakukan paging, biasanya di SQL kita akan menggunakan perintah LIMIT OFFSET
+     * ● Di Query Builder, kita bisa menggunakan method
+     * ● take(number) untuk melakukan LIMIT
+     * ● skip(number) untuk melakukan OFFSET
+     */
+
+    public function testPaging(){
+
+        $this->insertTableProduct();
+
+        // sql: select * from `categories` limit 2 offset 2
+        $collection = DB::table("categories")
+            ->skip(0) // OFFSET
+            ->take(2) // LIMIT
+            ->get();
+
+        self::assertCount(2, $collection);
+        $collection->each(function ($item){
+            Log::info(json_encode($item));
+        });
+
+        var_dump($collection);
+
+        /**
+         * result:
+         *
+         * [2024-06-13 10:28:37] testing.INFO: select * from `categories` limit 2 offset 0
+         * [2024-06-13 10:28:37] testing.INFO: {"id":"CELANA","name":"Celana","description":"","created_at":"2024-06-13 10:10:10"}
+         * [2024-06-13 10:28:37] testing.INFO: {"id":"JAKET","name":"Jaket","description":"","created_at":"2024-06-13 10:10:10"}
+         *
+         * [2024-06-13 10:27:30] testing.INFO: select * from `categories` limit 2 offset 2
+         * [2024-06-13 10:27:30] testing.INFO: {"id":"SANDAL","name":"Sandal","description":"","created_at":"2024-06-13 10:10:10"}
+         * [2024-06-13 10:27:30] testing.INFO: {"id":"TOPI","name":"Topi","description":"","created_at":"2024-06-13 10:10:10"}
+         */
+
+    }
+
 
 }
