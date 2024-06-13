@@ -261,5 +261,100 @@ class QueryBuilderTest extends TestCase
 
     }
 
+    /**
+     * Query Builder Update
+     * ● Setelah kita tahu cara menggunakan Where, sekarang kita bahas tentang Update Method
+     * ● Untuk melakukan Update, kita bisa menggunakan method update(array)
+     * ● Dimana parameter nya kita bisa mengirim associative array yang berisi kolom -> value
+     */
+
+    public function testUpdate(){
+
+        $this->testInsertDataCategories();
+
+        // DB::table("name_table")->where("column", "operator", "record_column")->update(["column" => "record_column"])
+        // sql: update `categories` set `name` = ? where `id` = ?
+        DB::table("categories")
+            ->where("id", "=", "CELANA")
+            ->update(["name" => "BOXER"]);
+
+        // sql: select * from `categories` where `name` = ?
+        $collection = DB::table("categories")->where("name", "=", "BOXER")->get();
+
+        self::assertCount(1, $collection);
+        $collection->each(function ($item){
+            Log::info(json_encode($item));
+        });
+
+        var_dump($collection);
+
+    }
+
+    /**
+     * Upsert (Update or Insert)
+     * ● Query Builder menyediakan method untuk melakukan update or insert, dimana ketika mencoba
+     *   melakukan update, jika datanya tidak ada, maka akan dilakukan insert data baru
+     * ● Kita bisa menggunakan method updateOrInsert(attributes, values)
+     */
+
+    public function testUpsert(){
+
+        // DB::table("name_table")->updateOrInsert(attributes[array_assosiative(select)], values[array_assosiative(yang mau di update)]);
+        // sql: insert into `categories` (`id`, `name`, `description`, `created_at`) values (?, ?, ?, ?)
+        DB::table("categories")
+            ->updateOrInsert(
+                [
+                    "id" => "CELANA"
+                ],
+                [
+                    "name" => "Jeans",
+                    "description" => "Celana Pria",
+                    "created_at" => "2024-05-13 10:10:10"
+                ]);
+
+        // sql: select * from `categories` where `id` = ?
+        $collection = DB::table("categories")
+            ->where("id", "=", "CELANA")
+            ->get();
+
+        self::assertCount(1, $collection);
+        $collection->each(function ($item){
+            Log::info(json_encode($item));
+        });
+
+        var_dump($collection);
+
+    }
+
+    /**
+     * Increment dan Decrement
+     * ● Query Builder juga menyediakan cara mudah untuk melakukan increment atau decrement
+     * ● Jadi kita tidak perlu melakukan increment atau decrement secara manual di kode PHP
+     * ● Kita bisa menggunakan method
+     * ● increment(column, increment) untuk melakukan increment
+     * ● decrement(column, decrement) untuk melakukan decrement
+     */
+
+    public function testQueryBuilderIncrement(){
+
+        // sql: update `counters` set `counter` = `counter` + 1 where `id` = ?
+        DB::table("counters")
+            ->where("id", "=", "sample")
+            ->increment("counter", 1);
+
+        // sql: select * from `counters` where `id` = ?
+        $collection = DB::table("counters")
+            ->where("id", "=" ,"sample")
+            ->get();
+
+        self::assertCount(1, $collection);
+        $collection->each(function ($item){
+            Log::info(json_encode($item));
+        });
+
+        var_dump($collection);
+
+    }
+
 
 }
