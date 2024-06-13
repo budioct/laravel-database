@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Foundation\Testing\WithFaker;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Tests\TestCase;
 
 class QueryBuilderTest extends TestCase
@@ -54,6 +55,36 @@ class QueryBuilderTest extends TestCase
         self::assertEquals(2, $result[0]->total);
 
         var_dump($result);
+
+    }
+
+    /**
+     * Query Builder Select
+     * ● Ada beberapa function di Query Builder yang bisa kita gunakan untuk melakukan perintah select
+     * ● select(columns), untuk mengubah select kolom, dimana defaultnya adalah semua kolom
+     * ● Setelah itu, untuk mengeksekusi SQL dan menyimpannya di Collection secara langsung, kita bisa
+     *   menggunakan beberapa method
+     * ● get(columns), untuk mengambil seluruh data, defaultnya semua kolom diambil
+     * ● first(columns), untuk mengambil data pertama, defaultnya semua kolom diambil
+     * ● pluck(column), untuk mengambil salah satu kolom saja
+     * ● Hasil dari Query Builder Select adalah Laravel Collection
+     */
+
+    public function testQueryBuilderSelect(){
+
+        $this->testQueryBuilderInsert(); //insert data
+
+        // DB::table("nama_table")->select([column_table])->get();
+        // untuk eksekusi query ada beberapa method get() ambil semua, first() ambil data pertama,   pluck() ambil beberpa data
+        $collection = DB::table("categories")
+            ->select(["id", "name"])
+            ->get();
+
+        self::assertNotNull($collection);
+
+        $collection->each(function ($item){
+            Log::info(json_encode($item));
+        });
 
     }
 
