@@ -801,5 +801,47 @@ class QueryBuilderTest extends TestCase
 
     }
 
+    /**
+     * Query Builder Raw
+     * ● Sayangnya, Aggregate Method yang ditawarkan oleh Laravel langsung menghasilkan data
+     * ● Padahal mungkin kita ingin membuat query untuk beberapa Aggregate Function, misal kombinasi
+     *   Min, Max, dan yang lainnya
+     * ● Pada kasus seperti ini, kita bisa menggunakan bantuan kombinasi Query Builder dan juga Raw
+     *   Query
+     */
+
+    public function testQueryBuilderRawAggreate(){
+
+        $this->insertTableProduct();
+
+        // sql: select count(id) as total_product, min(price) as min_price, max(price) as max_price from `products`
+        $collection = DB::table("products")
+            ->select(
+                DB::raw("count(id) as total_product"),
+                DB::raw("min(price) as min_price"),
+                DB::raw("max(price) as max_price"),
+            )->get();
+
+        self::assertNotNull($collection);
+        self::assertEquals(2, $collection[0]->total_product);
+        self::assertEquals(90000, $collection[0]->min_price);
+        self::assertEquals(100000, $collection[0]->max_price);
+
+        $collection->each(function ($item){
+            Log::info(json_encode($item));
+        });
+
+        var_dump($collection);
+
+        /**
+         * result:
+         * [2024-06-13 17:11:08] testing.INFO: insert into `products` (`id`, `name`, `description`, `price`, `category_id`) values (?, ?, ?, ?, ?)
+         * [2024-06-13 17:11:08] testing.INFO: insert into `products` (`id`, `name`, `description`, `price`, `category_id`) values (?, ?, ?, ?, ?)
+         * [2024-06-13 17:11:08] testing.INFO: select count(id) as total_product, min(price) as min_price, max(price) as max_price from `products`
+         * [2024-06-13 17:11:08] testing.INFO: {"total_product":2,"min_price":90000,"max_price":100000}
+         */
+
+    }
+
 
 }
