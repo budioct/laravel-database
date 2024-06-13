@@ -386,4 +386,77 @@ class QueryBuilderTest extends TestCase
 
     }
 
+    /**
+     * Query Builder Join
+     * ● Query Builder juga menyediakan cara mudah untuk melakukan join, dengan menggunakan
+     *   beberapa method
+     * ● join(table, column, operator, ref_column) untuk JOIN atau INNER JOIN
+     * ● leftJoin(table, column, operator, ref_column) untuk LEFT JOIN
+     * ● rightJoin(table, column, operator, ref_column) untuk RIGHT JOIN
+     * ● crossJoin(table, column, operator, ref_column) untuk CROSS JOIN
+     */
+
+    public function insertTableProduct(){
+
+        DB::table("products")->insert([
+            "id" => "1",
+            "name" => "Celana Eiger",
+            "description" => "Celana Gunung Eiger",
+            "price" => 100000,
+            "category_id" => "CELANA",
+        ]);
+
+        DB::table("products")->insert([
+            "id" => "2",
+            "name" => "Celana Consina",
+            "description" => "Celana Consina Eiger",
+            "price" => 90000,
+            "category_id" => "CELANA",
+        ]);
+
+    }
+
+    public function testQueryBuilderJoin(){
+
+        $this->testInsertDataCategories();
+        $this->insertTableProduct();
+
+        // sql: select `products`.`id`, `products`.`name`, `categories`.`name` as `category_name`, `products`.`price` from `products` inner join `categories` on `products`.`category_id` = `categories`.`id`
+        $collection = DB::table("products")
+            ->join("categories", "products.category_id", "=", "categories.id")
+            ->select("products.id", "products.name", "categories.name as category_name", "products.price") // select() // data apa saja yang mau di tampilkan // jika menggunakan alias, maka aliasnya yang di tampilkan
+            ->get();
+
+        self::assertCount(2, $collection);
+        for ($i = 0; $i < $this->count($collection); $i++) {
+            Log::info(json_encode($collection[$i]));
+        }
+
+        var_dump($collection);
+        // result: {"id":"1","name":"Celana Eiger","category_name":"Celana","price":100000}
+
+    }
+
+    public function testQueryBuilderLeftJoin(){
+
+        $this->testInsertDataCategories();
+        $this->insertTableProduct();
+
+        // sql: select `products`.`id`, `products`.`name`, `categories`.`name` as `category_name`, `products`.`price` from `products` left join `categories` on `products`.`category_id` = `categories`.`id`
+        $collection = DB::table("products")
+            ->leftJoin("categories", "products.category_id", "=", "categories.id")
+            ->select("products.id", "products.name", "categories.name as category_name", "products.price") // select() // data apa saja yang mau di tampilkan // jika menggunakan alias, maka aliasnya yang di tampilkan
+            ->get();
+
+        self::assertCount(2, $collection);
+        for ($i = 0; $i < $this->count($collection); $i++) {
+            Log::info(json_encode($collection[$i]));
+        }
+
+        var_dump($collection);
+        // result: {"id":"1","name":"Celana Eiger","category_name":"Celana","price":100000}
+
+    }
+
+
 }
