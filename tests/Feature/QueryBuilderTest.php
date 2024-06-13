@@ -698,5 +698,63 @@ class QueryBuilderTest extends TestCase
 
     }
 
+    /**
+     * Cursor
+     * ● Selain Chunk dan Lazy, terdapat cara lain untuk membuat Lazy Result, yaitu menggunakan Cursor
+     * ● Chunk dan Lazy sebenarnya melakukan paging dibelakang layar, sedangkan Cursor hanya akan
+     *   melakukan query satu kali
+     * ● Lalu akan mengambil datanya satu persatu menggunakan PDO::fetch()
+     * ● Jadi secara penggunaan memory, Cursor akan lebih hemat dibanding dengan Chunk atau Lazy
+     */
+
+    public function testCursor(){
+
+        $this->insertManyCategories(); // insert dump 100
+
+        // sql: select * from `categories` order by `id` asc
+        $collection = DB::table("categories")
+            ->orderBy("id", "asc")
+            ->cursor(); // cursor() // akan sekali query ke db dan data nya diambil satu - persatu
+
+        self::assertNotNull($collection);
+
+        $collection->each(function ($item){
+           Log::info(json_encode($item));
+        });
+
+        var_dump($collection);
+
+        /**
+         * result:
+         * [2024-06-13 15:17:05] testing.INFO: select * from `categories` order by `id` asc
+         * [2024-06-13 15:17:05] testing.INFO: {"id":"CATEGORY-0","name":"Category 0","description":null,"created_at":"2024-06-13 21:53:10"}
+         * [2024-06-13 15:17:05] testing.INFO: {"id":"CATEGORY-1","name":"Category 1","description":null,"created_at":"2024-06-13 21:53:10"}
+         * [2024-06-13 15:17:05] testing.INFO: {"id":"CATEGORY-10","name":"Category 10","description":null,"created_at":"2024-06-13 21:53:10"}
+         * [2024-06-13 15:17:05] testing.INFO: {"id":"CATEGORY-11","name":"Category 11","description":null,"created_at":"2024-06-13 21:53:10"}
+         * [2024-06-13 15:17:05] testing.INFO: {"id":"CATEGORY-12","name":"Category 12","description":null,"created_at":"2024-06-13 21:53:10"}
+         * [2024-06-13 15:17:05] testing.INFO: {"id":"CATEGORY-13","name":"Category 13","description":null,"created_at":"2024-06-13 21:53:10"}
+         * [2024-06-13 15:17:05] testing.INFO: {"id":"CATEGORY-14","name":"Category 14","description":null,"created_at":"2024-06-13 21:53:10"}
+         * [2024-06-13 15:17:05] testing.INFO: {"id":"CATEGORY-15","name":"Category 15","description":null,"created_at":"2024-06-13 21:53:10"}
+         * [2024-06-13 15:17:05] testing.INFO: {"id":"CATEGORY-16","name":"Category 16","description":null,"created_at":"2024-06-13 21:53:10"}
+         * [2024-06-13 15:17:05] testing.INFO: {"id":"CATEGORY-17","name":"Category 17","description":null,"created_at":"2024-06-13 21:53:10"}
+         * [2024-06-13 15:17:05] testing.INFO: {"id":"CATEGORY-18","name":"Category 18","description":null,"created_at":"2024-06-13 21:53:10"}
+         * [2024-06-13 15:17:05] testing.INFO: {"id":"CATEGORY-19","name":"Category 19","description":null,"created_at":"2024-06-13 21:53:10"}
+         * [2024-06-13 15:17:05] testing.INFO: {"id":"CATEGORY-2","name":"Category 2","description":null,"created_at":"2024-06-13 21:53:10"}
+         * [2024-06-13 15:17:05] testing.INFO: {"id":"CATEGORY-20","name":"Category 20","description":null,"created_at":"2024-06-13 21:53:10"}
+         * [2024-06-13 15:17:05] testing.INFO: {"id":"CATEGORY-21","name":"Category 21","description":null,"created_at":"2024-06-13 21:53:10"}
+         * [2024-06-13 15:17:05] testing.INFO: {"id":"CATEGORY-22","name":"Category 22","description":null,"created_at":"2024-06-13 21:53:10"}
+         * [2024-06-13 15:17:05] testing.INFO: {"id":"CATEGORY-23","name":"Category 23","description":null,"created_at":"2024-06-13 21:53:10"}
+         * [2024-06-13 15:17:05] testing.INFO: {"id":"CATEGORY-24","name":"Category 24","description":null,"created_at":"2024-06-13 21:53:10"}
+         * [2024-06-13 15:17:05] testing.INFO: {"id":"CATEGORY-25","name":"Category 25","description":null,"created_at":"2024-06-13 21:53:10"}
+         * [2024-06-13 15:17:05] testing.INFO: {"id":"CATEGORY-26","name":"Category 26","description":null,"created_at":"2024-06-13 21:53:10"}
+         * [2024-06-13 15:17:05] testing.INFO: {"id":"CATEGORY-27","name":"Category 27","description":null,"created_at":"2024-06-13 21:53:10"}
+         * [2024-06-13 15:17:05] testing.INFO: {"id":"CATEGORY-28","name":"Category 28","description":null,"created_at":"2024-06-13 21:53:10"}
+         * [2024-06-13 15:17:05] testing.INFO: {"id":"CATEGORY-29","name":"Category 29","description":null,"created_at":"2024-06-13 21:53:10"}
+         * [2024-06-13 15:17:05] testing.INFO: {"id":"CATEGORY-3","name":"Category 3","description":null,"created_at":"2024-06-13 21:53:10"}
+         * [2024-06-13 15:17:05] testing.INFO: {"id":"CATEGORY-30","name":"Category 30","description":null,"created_at":"2024-06-13 21:53:10"}
+         */
+
+    }
+
 
 }
