@@ -39,7 +39,8 @@ class QueryBuilderTest extends TestCase
      * ● insertOrIgnore() untuk memasukkan data ke database, dan jika terjadi error, maka akan di ignore
      */
 
-    public function testQueryBuilderInsert(){
+    public function testQueryBuilderInsert()
+    {
 
         // DB::table("nama_table")->insert(["key" => value]) // key adalah nama column dan value ada isi data record
         // sql: select count(id) as total from categories
@@ -74,7 +75,8 @@ class QueryBuilderTest extends TestCase
      * ● Hasil dari Query Builder Select adalah Laravel Collection
      */
 
-    public function testQueryBuilderSelect(){
+    public function testQueryBuilderSelect()
+    {
 
         $this->testQueryBuilderInsert(); //insert data
 
@@ -87,13 +89,14 @@ class QueryBuilderTest extends TestCase
 
         self::assertNotNull($collection);
 
-        $collection->each(function ($item){
+        $collection->each(function ($item) {
             Log::info(json_encode($item));
         });
 
     }
 
-    public function testInsertDataCategories(){
+    public function testInsertDataCategories()
+    {
 
         DB::table("categories")->insert([
             "id" => "SANDAL",
@@ -136,13 +139,14 @@ class QueryBuilderTest extends TestCase
      * whereNot(callback(Builder))                  NOT (condition …)
      */
 
-    public function testWhere(){
+    public function testWhere()
+    {
 
         $this->testInsertDataCategories();
 
         // DB::table("nama_table")->where(callback(Builder))->get(); // select where bisa di dalam callback
         // sql: select * from `categories` where (`id` = ? or `id` = ?)
-        $collection = DB::table("categories")->where(function(Builder $builder){
+        $collection = DB::table("categories")->where(function (Builder $builder) {
             $builder->where('id', '=', 'SANDAL');
             $builder->orWhere('id', '=', 'JAKET');
             // select * from categories where(id = SANDAL OR id = JAKET) // sql db
@@ -150,7 +154,7 @@ class QueryBuilderTest extends TestCase
 
         self::assertCount(2, $collection);
 
-        $collection->each(function ($item){
+        $collection->each(function ($item) {
             Log::info(json_encode($item));
         });
 
@@ -165,7 +169,8 @@ class QueryBuilderTest extends TestCase
      *  whereNotBetween(column, [value1,value2])     WHERE column NOT BETWEEN value1 AND value2
      */
 
-    public function testWhereBetween(){
+    public function testWhereBetween()
+    {
 
         $this->testInsertDataCategories();
 
@@ -176,7 +181,7 @@ class QueryBuilderTest extends TestCase
             ->get();
 
         self::assertCount(4, $collection);
-        $collection->each(function ($item){
+        $collection->each(function ($item) {
             Log::info(json_encode($item));
         });
 
@@ -190,7 +195,8 @@ class QueryBuilderTest extends TestCase
      *   whereIn(column, [array])                     WHERE column IN (array)
      *   whereNotIn(column, [array])                  WHERE column NOT IN (array)
      */
-    public function testWhereIn(){
+    public function testWhereIn()
+    {
 
         $this->testInsertDataCategories();
 
@@ -202,7 +208,7 @@ class QueryBuilderTest extends TestCase
 
         self::assertCount(2, $collection);
 
-        $collection->each(function ($item){
+        $collection->each(function ($item) {
             Log::info(json_encode($item));
         });
 
@@ -216,7 +222,8 @@ class QueryBuilderTest extends TestCase
      *    whereNull(column)                            WHERE column IS NULL
      *    whereNotNull(column)                         WHERE column IS NOT NULL
      */
-    public function testWhereNull(){
+    public function testWhereNull()
+    {
 
         $this->testInsertDataCategories();
 
@@ -227,7 +234,7 @@ class QueryBuilderTest extends TestCase
             ->get();
 
         self::assertCount(0, $collection);
-        $collection->each(function ($item){
+        $collection->each(function ($item) {
             Log::info(json_encode($item));
         });
 
@@ -244,7 +251,8 @@ class QueryBuilderTest extends TestCase
      *     whereYear(column, value)                     WHERE YEAR(column) = value
      *     whereTime(column, value)                     WHERE TIME(column) = value
      */
-    public function testWhereDate(){
+    public function testWhereDate()
+    {
 
         $this->testInsertDataCategories();
 
@@ -255,7 +263,7 @@ class QueryBuilderTest extends TestCase
             ->get();
 
         self::assertCount(4, $collection);
-        $collection->each(function ($item){
+        $collection->each(function ($item) {
             Log::info(json_encode($item));
         });
 
@@ -270,7 +278,8 @@ class QueryBuilderTest extends TestCase
      * ● Dimana parameter nya kita bisa mengirim associative array yang berisi kolom -> value
      */
 
-    public function testUpdate(){
+    public function testUpdate()
+    {
 
         $this->testInsertDataCategories();
 
@@ -284,7 +293,7 @@ class QueryBuilderTest extends TestCase
         $collection = DB::table("categories")->where("name", "=", "BOXER")->get();
 
         self::assertCount(1, $collection);
-        $collection->each(function ($item){
+        $collection->each(function ($item) {
             Log::info(json_encode($item));
         });
 
@@ -299,7 +308,8 @@ class QueryBuilderTest extends TestCase
      * ● Kita bisa menggunakan method updateOrInsert(attributes, values)
      */
 
-    public function testUpsert(){
+    public function testUpsert()
+    {
 
         // DB::table("name_table")->updateOrInsert(attributes[array_assosiative(select)], values[array_assosiative(yang mau di update)]);
         // sql: insert into `categories` (`id`, `name`, `description`, `created_at`) values (?, ?, ?, ?)
@@ -320,7 +330,7 @@ class QueryBuilderTest extends TestCase
             ->get();
 
         self::assertCount(1, $collection);
-        $collection->each(function ($item){
+        $collection->each(function ($item) {
             Log::info(json_encode($item));
         });
 
@@ -337,7 +347,8 @@ class QueryBuilderTest extends TestCase
      * ● decrement(column, decrement) untuk melakukan decrement
      */
 
-    public function testQueryBuilderIncrement(){
+    public function testQueryBuilderIncrement()
+    {
 
         // sql: update `counters` set `counter` = `counter` + 1 where `id` = ?
         DB::table("counters")
@@ -346,11 +357,11 @@ class QueryBuilderTest extends TestCase
 
         // sql: select * from `counters` where `id` = ?
         $collection = DB::table("counters")
-            ->where("id", "=" ,"sample")
+            ->where("id", "=", "sample")
             ->get();
 
         self::assertCount(1, $collection);
-        $collection->each(function ($item){
+        $collection->each(function ($item) {
             Log::info(json_encode($item));
         });
 
@@ -365,7 +376,8 @@ class QueryBuilderTest extends TestCase
      * ● truncate() untuk melakukan TRUNCATE table
      */
 
-    public function testQueryBuilderDelete(){
+    public function testQueryBuilderDelete()
+    {
 
         $this->testInsertDataCategories();
 
@@ -380,7 +392,7 @@ class QueryBuilderTest extends TestCase
             ->get();
 
         self::assertCount(0, $collection);
-        $collection->each(function ($item){
+        $collection->each(function ($item) {
             Log::info(json_encode($item));
         });
 
@@ -398,7 +410,8 @@ class QueryBuilderTest extends TestCase
      * ● crossJoin(table, column, operator, ref_column) untuk CROSS JOIN
      */
 
-    public function insertTableProduct(){
+    public function insertTableProduct()
+    {
 
         $this->testInsertDataCategories();
 
@@ -420,7 +433,8 @@ class QueryBuilderTest extends TestCase
 
     }
 
-    public function testQueryBuilderJoin(){
+    public function testQueryBuilderJoin()
+    {
 
         $this->insertTableProduct();
 
@@ -440,7 +454,8 @@ class QueryBuilderTest extends TestCase
 
     }
 
-    public function testQueryBuilderLeftJoin(){
+    public function testQueryBuilderLeftJoin()
+    {
 
         $this->insertTableProduct();
 
@@ -467,7 +482,8 @@ class QueryBuilderTest extends TestCase
      * ● orderBy(column, order) dimana order bisa asc atau desc
      */
 
-    public function testQueryBuilderOrdering(){
+    public function testQueryBuilderOrdering()
+    {
 
         $this->insertTableProduct();
 
@@ -479,7 +495,7 @@ class QueryBuilderTest extends TestCase
             ->get();
 
         self::assertCount(2, $collection);
-        $collection->each(function ($item){
+        $collection->each(function ($item) {
             Log::info(json_encode($item));
         });
 
@@ -501,7 +517,8 @@ class QueryBuilderTest extends TestCase
      * ● skip(number) untuk melakukan OFFSET
      */
 
-    public function testPaging(){
+    public function testPaging()
+    {
 
         $this->insertTableProduct();
 
@@ -512,7 +529,7 @@ class QueryBuilderTest extends TestCase
             ->get();
 
         self::assertCount(2, $collection);
-        $collection->each(function ($item){
+        $collection->each(function ($item) {
             Log::info(json_encode($item));
         });
 
@@ -556,7 +573,8 @@ class QueryBuilderTest extends TestCase
         }
     }
 
-    public function testChunk(){
+    public function testChunk()
+    {
 
         $this->insertManyCategories(); // insert dump 100
 
@@ -564,11 +582,11 @@ class QueryBuilderTest extends TestCase
         // sql: select * from `categories` order by `id` asc limit 10 offset ~ n
         $data = DB::table("categories")
             ->orderBy("id")
-            ->chunk(10, function ($categories){
-               self::assertNotNull($categories);
-               Log::info("Start Chunk");
-                $categories->each(function ($category){
-                   Log::info(json_encode($category));
+            ->chunk(10, function ($categories) {
+                self::assertNotNull($categories);
+                Log::info("Start Chunk");
+                $categories->each(function ($category) {
+                    Log::info(json_encode($category));
                 });
             });
 
@@ -627,7 +645,8 @@ class QueryBuilderTest extends TestCase
      * ● Implementasi detailnya sebenarnya tetap menggunakan Chunk Results
      */
 
-    public function testLazy(){
+    public function testLazy()
+    {
 
         $this->insertManyCategories(); // insert dump 100
 
@@ -646,8 +665,8 @@ class QueryBuilderTest extends TestCase
 
         assertNotNull($collection);
 
-        $collection->each(function ($itam){
-           Log::info(json_encode($itam));
+        $collection->each(function ($itam) {
+            Log::info(json_encode($itam));
         });
 
         var_dump($collection);
@@ -707,7 +726,8 @@ class QueryBuilderTest extends TestCase
      * ● Jadi secara penggunaan memory, Cursor akan lebih hemat dibanding dengan Chunk atau Lazy
      */
 
-    public function testCursor(){
+    public function testCursor()
+    {
 
         $this->insertManyCategories(); // insert dump 100
 
@@ -718,8 +738,8 @@ class QueryBuilderTest extends TestCase
 
         self::assertNotNull($collection);
 
-        $collection->each(function ($item){
-           Log::info(json_encode($item));
+        $collection->each(function ($item) {
+            Log::info(json_encode($item));
         });
 
         var_dump($collection);
@@ -767,7 +787,8 @@ class QueryBuilderTest extends TestCase
      * ● sum(column)        untuk menjumlahkan data
      */
 
-    public function testAggregate(){
+    public function testAggregate()
+    {
 
         $this->insertTableProduct();
 
@@ -810,7 +831,8 @@ class QueryBuilderTest extends TestCase
      *   Query
      */
 
-    public function testQueryBuilderRawAggreate(){
+    public function testQueryBuilderRawAggreate()
+    {
 
         $this->insertTableProduct();
 
@@ -827,7 +849,7 @@ class QueryBuilderTest extends TestCase
         self::assertEquals(90000, $collection[0]->min_price);
         self::assertEquals(100000, $collection[0]->max_price);
 
-        $collection->each(function ($item){
+        $collection->each(function ($item) {
             Log::info(json_encode($item));
         });
 
@@ -843,5 +865,98 @@ class QueryBuilderTest extends TestCase
 
     }
 
+    /**
+     * Query Builder Grouping
+     * ● Saat melakukan Query menggunakan Aggregate Function, kadang kita ingin melakukan Groping
+     * ● Kita bisa menggunakan method groupBy(value) untuk melakukan Grouping
+     */
+
+    public function insertProductJaket()
+    {
+        DB::table("products")->insert([
+            "id" => "3",
+            "name" => "Jaket Consina",
+            "description" => "Jaket Gunung Consina",
+            "price" => 100000,
+            "category_id" => "JAKET",
+        ]);
+        DB::table("products")->insert([
+            "id" => "4",
+            "name" => "Jaket Eiger",
+            "description" => "Jaket Gunung Eiger",
+            "price" => 100000,
+            "category_id" => "JAKET",
+        ]);
+
+    }
+
+    public function testGroupBy()
+    {
+
+        // grouping list
+
+        $this->insertTableProduct();
+        $this->insertProductJaket();
+
+        // sql: select `category_id`, count(*) as total_product from `products` group by `category_id` order by `category_id` desc
+        $collection = DB::table("products")
+            ->select("category_id", DB::raw("count(*) as total_product"))
+            ->groupBy("category_id")
+            ->orderBy("category_id", "desc")
+            ->get();
+
+        assertNotNull($collection);
+        self::assertCount(2, $collection);
+        self::assertEquals("JAKET", $collection[0]->category_id);
+        self::assertEquals(2, $collection[0]->total_product);
+        self::assertEquals("CELANA", $collection[1]->category_id);
+        self::assertEquals(2, $collection[1]->total_product);
+
+        $collection->each(function ($item) {
+            Log::info(json_encode($item));
+        });
+
+        var_dump($collection);
+
+        /**
+         * result:
+         * [2024-06-13 17:28:06] testing.INFO: select `category_id`, count(*) as total_product from `products` group by `category_id` order by `category_id` desc
+         * [2024-06-13 17:28:06] testing.INFO: {"category_id":"JAKET","total_product":2}
+         * [2024-06-13 17:28:06] testing.INFO: {"category_id":"CELANA","total_product":2}
+         */
+
+    }
+
+    /**
+     * Having
+     * ● Di SQL, kita bisa menambahkan Having ketika menggunakan Group By
+     * ● Di Laravel juga bisa kita lakukan menggunakan method having(column, operator, value)
+     */
+
+    public function testGroupByHaving()
+    {
+        $this->insertTableProduct();
+        $this->insertProductJaket();
+
+        // sql: select `category_id`, count(*) as total_product from `products` group by `category_id` having count(*) > ? order by `category_id` desc
+        $collection = DB::table("products")
+            ->select("category_id", DB::raw("count(*) as total_product"))
+            ->groupBy("category_id")
+            ->having(DB::raw("count(*)"), ">", 2)
+            ->orderBy("category_id", "desc")
+            ->get();
+
+        self::assertCount(0, $collection);
+
+        $collection->each(function ($item) {
+            Log::info(json_encode($item));
+        });
+
+        var_dump($collection);
+
+        /**
+         *
+         */
+    }
 
 }
