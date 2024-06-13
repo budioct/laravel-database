@@ -531,5 +531,89 @@ class QueryBuilderTest extends TestCase
 
     }
 
+    /**
+     * Chunk Result
+     * ● Saat kita membuat aplikasi, kadang ada kasus kita mengelola data dengan ukuran besar
+     * ● Secara default, semua query yang kita lakukan di Laravel, akan di load ke Memory sebagai
+     *   Collection
+     * ● Hal ini berbahaya ketika hasil query nya banyak, karena bisa berakibat terjadi error Out Of
+     *   Memory
+     * ● Dari pada kita me load semua data ke Memory, kita bisa memotong data hasil query secara
+     *   bertahap menggunakan method chunk()
+     * ● Implementasi chunk sebenarnya adalah dengan melakukan paging
+     * ● Dan jika ingin menggunakan chunk, kita harus menambahkan ordering pada query nya
+     */
+
+    public function insertManyCategories()
+    {
+        for ($i = 0; $i < 100; $i++) {
+            DB::table("categories")->insert([
+                "id" => "CATEGORY-$i",
+                "name" => "Category $i",
+                "created_at" => "2024-06-13 21:53:10"
+            ]);
+        }
+    }
+
+    public function testChunk(){
+
+        $this->insertManyCategories(); // insert dump 100
+
+        // chunk  memotong data hasil query secara bertahap.. // skenario akan ambil setiap 10 data,
+        // sql: select * from `categories` order by `id` asc limit 10 offset ~ n
+        $data = DB::table("categories")
+            ->orderBy("id")
+            ->chunk(10, function ($categories){
+               self::assertNotNull($categories);
+               Log::info("Start Chunk");
+                $categories->each(function ($category){
+                   Log::info(json_encode($category));
+                });
+            });
+
+        var_dump($data);
+
+        /**
+         * result: dia akan ambil data per 10, sudah ada limit 10 offset 10 juga
+         * [2024-06-13 14:59:47] testing.INFO: select * from `categories` order by `id` asc limit 10 offset 0
+         * [2024-06-13 14:59:47] testing.INFO: Start Chunk
+         * [2024-06-13 14:59:47] testing.INFO: {"id":"CATEGORY-0","name":"Category 0","description":null,"created_at":"2024-06-13 21:53:10"}
+         * [2024-06-13 14:59:47] testing.INFO: {"id":"CATEGORY-1","name":"Category 1","description":null,"created_at":"2024-06-13 21:53:10"}
+         * [2024-06-13 14:59:47] testing.INFO: {"id":"CATEGORY-10","name":"Category 10","description":null,"created_at":"2024-06-13 21:53:10"}
+         * [2024-06-13 14:59:47] testing.INFO: {"id":"CATEGORY-11","name":"Category 11","description":null,"created_at":"2024-06-13 21:53:10"}
+         * [2024-06-13 14:59:47] testing.INFO: {"id":"CATEGORY-12","name":"Category 12","description":null,"created_at":"2024-06-13 21:53:10"}
+         * [2024-06-13 14:59:47] testing.INFO: {"id":"CATEGORY-13","name":"Category 13","description":null,"created_at":"2024-06-13 21:53:10"}
+         * [2024-06-13 14:59:47] testing.INFO: {"id":"CATEGORY-14","name":"Category 14","description":null,"created_at":"2024-06-13 21:53:10"}
+         * [2024-06-13 14:59:47] testing.INFO: {"id":"CATEGORY-15","name":"Category 15","description":null,"created_at":"2024-06-13 21:53:10"}
+         * [2024-06-13 14:59:47] testing.INFO: {"id":"CATEGORY-16","name":"Category 16","description":null,"created_at":"2024-06-13 21:53:10"}
+         * [2024-06-13 14:59:47] testing.INFO: {"id":"CATEGORY-17","name":"Category 17","description":null,"created_at":"2024-06-13 21:53:10"}
+         * [2024-06-13 14:59:47] testing.INFO: select * from `categories` order by `id` asc limit 10 offset 10
+         * [2024-06-13 14:59:47] testing.INFO: Start Chunk
+         * [2024-06-13 14:59:47] testing.INFO: {"id":"CATEGORY-18","name":"Category 18","description":null,"created_at":"2024-06-13 21:53:10"}
+         * [2024-06-13 14:59:47] testing.INFO: {"id":"CATEGORY-19","name":"Category 19","description":null,"created_at":"2024-06-13 21:53:10"}
+         * [2024-06-13 14:59:47] testing.INFO: {"id":"CATEGORY-2","name":"Category 2","description":null,"created_at":"2024-06-13 21:53:10"}
+         * [2024-06-13 14:59:47] testing.INFO: {"id":"CATEGORY-20","name":"Category 20","description":null,"created_at":"2024-06-13 21:53:10"}
+         * [2024-06-13 14:59:47] testing.INFO: {"id":"CATEGORY-21","name":"Category 21","description":null,"created_at":"2024-06-13 21:53:10"}
+         * [2024-06-13 14:59:47] testing.INFO: {"id":"CATEGORY-22","name":"Category 22","description":null,"created_at":"2024-06-13 21:53:10"}
+         * [2024-06-13 14:59:47] testing.INFO: {"id":"CATEGORY-23","name":"Category 23","description":null,"created_at":"2024-06-13 21:53:10"}
+         * [2024-06-13 14:59:47] testing.INFO: {"id":"CATEGORY-24","name":"Category 24","description":null,"created_at":"2024-06-13 21:53:10"}
+         * [2024-06-13 14:59:47] testing.INFO: {"id":"CATEGORY-25","name":"Category 25","description":null,"created_at":"2024-06-13 21:53:10"}
+         * [2024-06-13 14:59:47] testing.INFO: {"id":"CATEGORY-26","name":"Category 26","description":null,"created_at":"2024-06-13 21:53:10"}
+         * [2024-06-13 14:59:47] testing.INFO: select * from `categories` order by `id` asc limit 10 offset 20
+         * [2024-06-13 14:59:47] testing.INFO: Start Chunk
+         * [2024-06-13 14:59:47] testing.INFO: {"id":"CATEGORY-27","name":"Category 27","description":null,"created_at":"2024-06-13 21:53:10"}
+         * [2024-06-13 14:59:47] testing.INFO: {"id":"CATEGORY-28","name":"Category 28","description":null,"created_at":"2024-06-13 21:53:10"}
+         * [2024-06-13 14:59:47] testing.INFO: {"id":"CATEGORY-29","name":"Category 29","description":null,"created_at":"2024-06-13 21:53:10"}
+         * [2024-06-13 14:59:47] testing.INFO: {"id":"CATEGORY-3","name":"Category 3","description":null,"created_at":"2024-06-13 21:53:10"}
+         * [2024-06-13 14:59:47] testing.INFO: {"id":"CATEGORY-30","name":"Category 30","description":null,"created_at":"2024-06-13 21:53:10"}
+         * [2024-06-13 14:59:47] testing.INFO: {"id":"CATEGORY-31","name":"Category 31","description":null,"created_at":"2024-06-13 21:53:10"}
+         * [2024-06-13 14:59:47] testing.INFO: {"id":"CATEGORY-32","name":"Category 32","description":null,"created_at":"2024-06-13 21:53:10"}
+         * [2024-06-13 14:59:47] testing.INFO: {"id":"CATEGORY-33","name":"Category 33","description":null,"created_at":"2024-06-13 21:53:10"}
+         * [2024-06-13 14:59:47] testing.INFO: {"id":"CATEGORY-34","name":"Category 34","description":null,"created_at":"2024-06-13 21:53:10"}
+         * [2024-06-13 14:59:47] testing.INFO: {"id":"CATEGORY-35","name":"Category 35","description":null,"created_at":"2024-06-13 21:53:10"}
+         */
+
+    }
+
 
 }
