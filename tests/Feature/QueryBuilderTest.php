@@ -973,7 +973,7 @@ class QueryBuilderTest extends TestCase
      * ● Contoh saja, ketika kita belanja di toko online, kita akan balapan membeli barang yang sama, jika
      *   data tidak terjaga, bisa jadi kita salah mengupdate stock karena pada saat yang bersamaan banyak
      *   yang melakukan perubahan stock barang
-     * 
+     *
      * Query Builder Locking
      * ● Saat kita belajar Database Transaction di MySQL, kita sudah belajar cara melakukan Locking
      *   Record ketika melakukan Select dengan menambahkan perintah FOR UPDATE
@@ -1011,6 +1011,125 @@ class QueryBuilderTest extends TestCase
              */
 
         });
+
+    }
+
+    /**
+     * Pagination
+     * ● Saat kita membuat aplikasi Web atau RESTful API yang mengembalikan data di database, kita
+     *   sering memberi informasi tentang pagination, misal jumlah record, jumlah page, page saat ini, dan
+     *   lain-lain
+     * ● Jika kita lakukan semuanya secara manual, maka lumayan memakan waktu
+     * ● Untungnya Laravel memiliki fitur pagination, dimana kita bisa menggunakan method paginate(),
+     *   dan secara otomatis akan mengembalikan object LengthAwarePagination
+     * ● https://laravel.com/api/10.x/Illuminate/Database/Query/Builder.html#method_paginate
+     * ● https://laravel.com/api/10.x/Illuminate/Contracts/Pagination/LengthAwarePaginator.html
+     */
+
+    public function testPagination(){
+
+        $this->insertManyCategories();
+
+        $paginate = DB::table("categories")
+            ->paginate(perPage: 2, page: 2); // paginate($perPage = 15, $columns = ['*'], $pageName = 'page', $page = null):  LengthAwarePaginator
+
+        self::assertEquals(2, $paginate->currentPage()); // currentPage() // halaman saat ini
+        self::assertEquals(2, $paginate->perPage()); // perPage() // data setiap halaman
+        self::assertEquals(50, $paginate->lastPage()); // lastPage() // halaman terakhir
+        self::assertEquals(100, $paginate->total()); // total() get total data
+        self::assertTrue(true);
+
+        $collection = $paginate->items(); // items() // get collection dari paginate
+
+        var_dump($paginate);
+        foreach ($collection as $item) {
+            Log::info(json_encode($item));
+        }
+
+        /**
+         * result:
+         * [2024-06-14 02:07:24] testing.INFO: select count(*) as aggregate from `categories`
+         * [2024-06-14 02:07:24] testing.INFO: select * from `categories` limit 2 offset 2
+         * [2024-06-14 02:07:24] testing.INFO: {"id":"CATEGORY-10","name":"Category 10","description":null,"created_at":"2024-06-13 21:53:10"}
+         * [2024-06-14 02:07:24] testing.INFO: {"id":"CATEGORY-11","name":"Category 11","description":null,"created_at":"2024-06-13 21:53:10"}
+         */
+
+    }
+
+    /**
+     * Iterasi Per Page
+     * ● Untuk melakukan iterasi semua halaman, kita bisa lakukan dengan cara menaikkan nilai dari
+     *   parameter page dari 1 sampai page terakhir
+     */
+
+    public function testPaginationIteration(){
+
+        // note: paginate di laravel interasi secara manual
+
+        $this->insertManyCategories();
+
+        $page = 1; // inital start page
+
+        while (true) {
+
+            // sql: select count(*) as aggregate from `categories` // jumlahnya di hitung, karna pagination itu butuh data total item ada berapa
+            // sql: select * from `categories` limit 10 offset 90
+            // ambil 10 data setiap 1 halaman
+            $paginate = DB::table("categories")
+                ->paginate(perPage: 10, page: $page); // paginate($perPage = 15, $columns = ['*'], $pageName = 'page', $page = null):  LengthAwarePaginator
+
+            // check jika pagination sudah kosong, hentikan looping nya
+            if ($paginate->isEmpty()) {
+                break;
+            } else {
+                $page++;
+                $collection = $paginate->items(); // items() // get collection dari paginate
+                self::assertCount(10, $collection);
+                foreach ($collection as $item) {
+                    Log::info(json_encode($item));
+                }
+            }
+        }
+
+        /**
+         * result:
+         * [2024-06-14 02:39:53] testing.INFO: select count(*) as aggregate from `categories`
+         * [2024-06-14 02:39:53] testing.INFO: select * from `categories` limit 10 offset 0
+         * [2024-06-14 02:39:53] testing.INFO: {"id":"CATEGORY-0","name":"Category 0","description":null,"created_at":"2024-06-13 21:53:10"}
+         * [2024-06-14 02:39:53] testing.INFO: {"id":"CATEGORY-1","name":"Category 1","description":null,"created_at":"2024-06-13 21:53:10"}
+         * [2024-06-14 02:39:53] testing.INFO: {"id":"CATEGORY-10","name":"Category 10","description":null,"created_at":"2024-06-13 21:53:10"}
+         * [2024-06-14 02:39:53] testing.INFO: {"id":"CATEGORY-11","name":"Category 11","description":null,"created_at":"2024-06-13 21:53:10"}
+         * [2024-06-14 02:39:53] testing.INFO: {"id":"CATEGORY-12","name":"Category 12","description":null,"created_at":"2024-06-13 21:53:10"}
+         * [2024-06-14 02:39:53] testing.INFO: {"id":"CATEGORY-13","name":"Category 13","description":null,"created_at":"2024-06-13 21:53:10"}
+         * [2024-06-14 02:39:53] testing.INFO: {"id":"CATEGORY-14","name":"Category 14","description":null,"created_at":"2024-06-13 21:53:10"}
+         * [2024-06-14 02:39:53] testing.INFO: {"id":"CATEGORY-15","name":"Category 15","description":null,"created_at":"2024-06-13 21:53:10"}
+         * [2024-06-14 02:39:53] testing.INFO: {"id":"CATEGORY-16","name":"Category 16","description":null,"created_at":"2024-06-13 21:53:10"}
+         * [2024-06-14 02:39:53] testing.INFO: {"id":"CATEGORY-17","name":"Category 17","description":null,"created_at":"2024-06-13 21:53:10"}
+         * [2024-06-14 02:39:53] testing.INFO: select count(*) as aggregate from `categories`
+         * [2024-06-14 02:39:53] testing.INFO: select * from `categories` limit 10 offset 10
+         * [2024-06-14 02:39:53] testing.INFO: {"id":"CATEGORY-18","name":"Category 18","description":null,"created_at":"2024-06-13 21:53:10"}
+         * [2024-06-14 02:39:53] testing.INFO: {"id":"CATEGORY-19","name":"Category 19","description":null,"created_at":"2024-06-13 21:53:10"}
+         * [2024-06-14 02:39:53] testing.INFO: {"id":"CATEGORY-2","name":"Category 2","description":null,"created_at":"2024-06-13 21:53:10"}
+         * [2024-06-14 02:39:53] testing.INFO: {"id":"CATEGORY-20","name":"Category 20","description":null,"created_at":"2024-06-13 21:53:10"}
+         * [2024-06-14 02:39:53] testing.INFO: {"id":"CATEGORY-21","name":"Category 21","description":null,"created_at":"2024-06-13 21:53:10"}
+         * [2024-06-14 02:39:53] testing.INFO: {"id":"CATEGORY-22","name":"Category 22","description":null,"created_at":"2024-06-13 21:53:10"}
+         * [2024-06-14 02:39:53] testing.INFO: {"id":"CATEGORY-23","name":"Category 23","description":null,"created_at":"2024-06-13 21:53:10"}
+         * [2024-06-14 02:39:53] testing.INFO: {"id":"CATEGORY-24","name":"Category 24","description":null,"created_at":"2024-06-13 21:53:10"}
+         * [2024-06-14 02:39:53] testing.INFO: {"id":"CATEGORY-25","name":"Category 25","description":null,"created_at":"2024-06-13 21:53:10"}
+         * [2024-06-14 02:39:53] testing.INFO: {"id":"CATEGORY-26","name":"Category 26","description":null,"created_at":"2024-06-13 21:53:10"}
+         * [2024-06-14 02:39:53] testing.INFO: select count(*) as aggregate from `categories`
+         * [2024-06-14 02:39:53] testing.INFO: select * from `categories` limit 10 offset 20
+         * [2024-06-14 02:39:53] testing.INFO: {"id":"CATEGORY-27","name":"Category 27","description":null,"created_at":"2024-06-13 21:53:10"}
+         * [2024-06-14 02:39:53] testing.INFO: {"id":"CATEGORY-28","name":"Category 28","description":null,"created_at":"2024-06-13 21:53:10"}
+         * [2024-06-14 02:39:53] testing.INFO: {"id":"CATEGORY-29","name":"Category 29","description":null,"created_at":"2024-06-13 21:53:10"}
+         * [2024-06-14 02:39:53] testing.INFO: {"id":"CATEGORY-3","name":"Category 3","description":null,"created_at":"2024-06-13 21:53:10"}
+         * [2024-06-14 02:39:53] testing.INFO: {"id":"CATEGORY-30","name":"Category 30","description":null,"created_at":"2024-06-13 21:53:10"}
+         * [2024-06-14 02:39:53] testing.INFO: {"id":"CATEGORY-31","name":"Category 31","description":null,"created_at":"2024-06-13 21:53:10"}
+         * [2024-06-14 02:39:53] testing.INFO: {"id":"CATEGORY-32","name":"Category 32","description":null,"created_at":"2024-06-13 21:53:10"}
+         * [2024-06-14 02:39:53] testing.INFO: {"id":"CATEGORY-33","name":"Category 33","description":null,"created_at":"2024-06-13 21:53:10"}
+         * [2024-06-14 02:39:53] testing.INFO: {"id":"CATEGORY-34","name":"Category 34","description":null,"created_at":"2024-06-13 21:53:10"}
+         * [2024-06-14 02:39:53] testing.INFO: {"id":"CATEGORY-35","name":"Category 35","description":null,"created_at":"2024-06-13 21:53:10"}
+         */
 
     }
 
