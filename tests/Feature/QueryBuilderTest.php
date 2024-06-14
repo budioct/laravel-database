@@ -901,8 +901,8 @@ class QueryBuilderTest extends TestCase
         // sql: select `category_id`, count(*) as total_product from `products` group by `category_id` order by `category_id` desc
         $collection = DB::table("products")
             ->select("category_id", DB::raw("count(*) as total_product"))
-            ->groupBy("category_id")
-            ->orderBy("category_id", "desc")
+            ->groupBy("category_id") // kita ingin datanya di grouping berdasarkan kriteria tertentu
+            ->orderBy("category_id", "desc") // Untuk mengurutkan data ketika kita menggunakan perintah SQL SELECT
             ->get();
 
         assertNotNull($collection);
@@ -941,8 +941,8 @@ class QueryBuilderTest extends TestCase
         // sql: select `category_id`, count(*) as total_product from `products` group by `category_id` having count(*) > ? order by `category_id` desc
         $collection = DB::table("products")
             ->select("category_id", DB::raw("count(*) as total_product"))
-            ->groupBy("category_id")
-            ->having(DB::raw("count(*)"), ">", 2)
+            ->groupBy("category_id") // kita ingin datanya di grouping berdasarkan kriteria tertentu
+            ->having(DB::raw("count(*)"), ">", 2)// melakukan filter terhadap data yang sudah kita grouping
             ->orderBy("category_id", "desc")
             ->get();
 
@@ -955,8 +955,63 @@ class QueryBuilderTest extends TestCase
         var_dump($collection);
 
         /**
-         *
+         * result:
+         * datanya tidak akan di ambil karna kita filter data yang sudah di grouping dengan kodisi total data harus lebh dari 2..
+         * sedangkan data yang kita dapat 2.. jadi tidak memenuhi syarata 2 > 2 = false
          */
+    }
+
+    /**
+     * Locking
+     * ● Locking adalah proses mengunci data di DBMS
+     * ● Proses mengunci data sangat penting dilakukan, salah satunya agar data benar-benar terjamin
+     *   konsistensinya
+     * ● Karena pada kenyataannya, aplikasi yang akan kita buat pasti digunakan oleh banyak pengguna,
+     *   dan banyak pengguna tersebut bisa saja akan mengakses data yang sama, jika tidak ada proses
+     *  locking, bisa dipastikan akan terjadi RACE CONDITION, yaitu proses balapan ketika mengubah
+     *  data yang sama
+     * ● Contoh saja, ketika kita belanja di toko online, kita akan balapan membeli barang yang sama, jika
+     *   data tidak terjaga, bisa jadi kita salah mengupdate stock karena pada saat yang bersamaan banyak
+     *   yang melakukan perubahan stock barang
+     * 
+     * Query Builder Locking
+     * ● Saat kita belajar Database Transaction di MySQL, kita sudah belajar cara melakukan Locking
+     *   Record ketika melakukan Select dengan menambahkan perintah FOR UPDATE
+     * ● Di Query Builder, jika kita ingin melakukan Locking, kita bisa menggunakan method
+     *   lockForUpdate()
+     * ● Secara otomatis Laravel akan menambahkan perintah FOR UPDATE ke Database untuk melakukan
+     *   Locking
+     *
+     *
+     */
+
+    public function testLocking(){
+
+        $this->insertTableProduct();
+
+        DB::transaction(function (){
+            // sql: select * from `products` where `id` = ? for update
+            $collection = DB::table("products")
+                ->where("id", "=", "1")
+                ->lockForUpdate()
+                ->get();
+
+            self::assertCount(1, $collection);
+
+            $collection->each(function ($item) {
+                Log::info(json_encode($item));
+            });
+
+            var_dump($collection);
+
+            /**
+             * result:
+             * [2024-06-14 01:41:16] testing.INFO: select * from `products` where `id` = ? for update
+             * [2024-06-14 01:41:16] testing.INFO: {"id":"1","name":"Celana Eiger","description":"Celana Gunung Eiger","price":100000,"category_id":"CELANA","created_at":"2024-06-14 08:41:16"}
+             */
+
+        });
+
     }
 
 }
