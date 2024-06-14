@@ -1133,4 +1133,94 @@ class QueryBuilderTest extends TestCase
 
     }
 
+    /**
+     * Masalah dengan Limit Offset
+     * ● Saat jumlah data kita semakin banyak di tabel, dan ketika kita melakukan pagination, semakin
+     *   dalam page yang kita cari, maka akan semakin lambat, hal ini karena setiap melakukan paging, kita
+     *   harus melakukan offset / skip sejumlah data hasil pencarian, semakin banyak yang kita skip,
+     *   semakin lambat juga hasilnya
+     * ● https://mariadb.com/kb/en/pagination-optimization/
+     * ● Salah satu cara untuk optimalisasi proses paging, adalah menggunakan SEARCH AFTER, dimana
+     *   kita tidak menggunakan nomor page lagi, melainkan menampilkan data setelah data terakhir yang
+     *   kita lihat
+     * ● Hal ini membuat proses Query menjadi lebih cepat, karena kita selalu akan menampilkan page
+     *   pertama dan tidak pernah melakukan offset / skip data
+     *
+     * Kekurangan Search After
+     * ● Cara ini dinamakan Search After
+     * ● Kekurangan Search After adalah kita tidak bisa loncat dari satu page ke page lain, karena query nya
+     *   selalu harus diubah
+     * ● Selain itu, Cursor Pagination harus melakukan sort dan filter berdasarkan salah satu kolom yang
+     *   unique, misalnya primary key
+     *
+     * Cursor Pagination
+     * ● Implementasi Search After di Laravel tidak perlu dilakukan secara manual, kita bisa menggunakan
+     *   method cursorPaginate() untuk melakukan Search After
+     * ● Hasil dari method ini adalah object CursorPaginator
+     * ● https://laravel.com/api/10.x/Illuminate/Database/Query/Builder.html#method_cursorPaginate
+     * ● https://laravel.com/api/10.x/Illuminate/Contracts/Pagination/CursorPaginator.html
+     */
+
+    public function testCursorPagination(){
+
+        $this->insertManyCategories();
+
+        $cursor = "id"; // sama seperti column orderBy
+        while (true){
+            $paginate = DB::table("categories")
+                ->orderBy("id")
+                ->cursorPaginate(perPage: 10, cursor: $cursor); // cursorPaginate($perPage = 15, $columns = ['*'], $cursorName = 'cursor', $cursor = null): CursorPaginator
+
+            // items() // konversi object CursorPaginator ke collection laravel
+            foreach ($paginate->items() as $item) {
+                assertNotNull($item);
+                Log::info(json_encode($item));
+            }
+
+            $cursor = $paginate->nextCursor(); // return Cursor|null // Dapatkan "cursor" dari kumpulan item berikutnya
+            // jika halaman berikutnya sudah tidak ada, maka hentikan looping
+            if ($cursor == null){
+                break;
+            }
+        }
+
+        /**
+         * result: kenapa query lebih +1 di limit, itu supaya laravel tahu untuk Search After di paginate selanjutnya
+         * [2024-06-14 03:54:15] testing.INFO: select * from `categories` order by `id` asc limit 11
+         * [2024-06-14 03:54:15] testing.INFO: {"id":"CATEGORY-0","name":"Category 0","description":null,"created_at":"2024-06-13 21:53:10"}
+         * [2024-06-14 03:54:15] testing.INFO: {"id":"CATEGORY-1","name":"Category 1","description":null,"created_at":"2024-06-13 21:53:10"}
+         * [2024-06-14 03:54:15] testing.INFO: {"id":"CATEGORY-10","name":"Category 10","description":null,"created_at":"2024-06-13 21:53:10"}
+         * [2024-06-14 03:54:15] testing.INFO: {"id":"CATEGORY-11","name":"Category 11","description":null,"created_at":"2024-06-13 21:53:10"}
+         * [2024-06-14 03:54:15] testing.INFO: {"id":"CATEGORY-12","name":"Category 12","description":null,"created_at":"2024-06-13 21:53:10"}
+         * [2024-06-14 03:54:15] testing.INFO: {"id":"CATEGORY-13","name":"Category 13","description":null,"created_at":"2024-06-13 21:53:10"}
+         * [2024-06-14 03:54:15] testing.INFO: {"id":"CATEGORY-14","name":"Category 14","description":null,"created_at":"2024-06-13 21:53:10"}
+         * [2024-06-14 03:54:15] testing.INFO: {"id":"CATEGORY-15","name":"Category 15","description":null,"created_at":"2024-06-13 21:53:10"}
+         * [2024-06-14 03:54:15] testing.INFO: {"id":"CATEGORY-16","name":"Category 16","description":null,"created_at":"2024-06-13 21:53:10"}
+         * [2024-06-14 03:54:15] testing.INFO: {"id":"CATEGORY-17","name":"Category 17","description":null,"created_at":"2024-06-13 21:53:10"}
+         * [2024-06-14 03:54:15] testing.INFO: select * from `categories` where (`id` > ?) order by `id` asc limit 11
+         * [2024-06-14 03:54:15] testing.INFO: {"id":"CATEGORY-18","name":"Category 18","description":null,"created_at":"2024-06-13 21:53:10"}
+         * [2024-06-14 03:54:15] testing.INFO: {"id":"CATEGORY-19","name":"Category 19","description":null,"created_at":"2024-06-13 21:53:10"}
+         * [2024-06-14 03:54:15] testing.INFO: {"id":"CATEGORY-2","name":"Category 2","description":null,"created_at":"2024-06-13 21:53:10"}
+         * [2024-06-14 03:54:15] testing.INFO: {"id":"CATEGORY-20","name":"Category 20","description":null,"created_at":"2024-06-13 21:53:10"}
+         * [2024-06-14 03:54:15] testing.INFO: {"id":"CATEGORY-21","name":"Category 21","description":null,"created_at":"2024-06-13 21:53:10"}
+         * [2024-06-14 03:54:15] testing.INFO: {"id":"CATEGORY-22","name":"Category 22","description":null,"created_at":"2024-06-13 21:53:10"}
+         * [2024-06-14 03:54:15] testing.INFO: {"id":"CATEGORY-23","name":"Category 23","description":null,"created_at":"2024-06-13 21:53:10"}
+         * [2024-06-14 03:54:15] testing.INFO: {"id":"CATEGORY-24","name":"Category 24","description":null,"created_at":"2024-06-13 21:53:10"}
+         * [2024-06-14 03:54:15] testing.INFO: {"id":"CATEGORY-25","name":"Category 25","description":null,"created_at":"2024-06-13 21:53:10"}
+         * [2024-06-14 03:54:15] testing.INFO: {"id":"CATEGORY-26","name":"Category 26","description":null,"created_at":"2024-06-13 21:53:10"}
+         * [2024-06-14 03:54:15] testing.INFO: select * from `categories` where (`id` > ?) order by `id` asc limit 11
+         * [2024-06-14 03:54:15] testing.INFO: {"id":"CATEGORY-27","name":"Category 27","description":null,"created_at":"2024-06-13 21:53:10"}
+         * [2024-06-14 03:54:15] testing.INFO: {"id":"CATEGORY-28","name":"Category 28","description":null,"created_at":"2024-06-13 21:53:10"}
+         * [2024-06-14 03:54:15] testing.INFO: {"id":"CATEGORY-29","name":"Category 29","description":null,"created_at":"2024-06-13 21:53:10"}
+         * [2024-06-14 03:54:15] testing.INFO: {"id":"CATEGORY-3","name":"Category 3","description":null,"created_at":"2024-06-13 21:53:10"}
+         * [2024-06-14 03:54:15] testing.INFO: {"id":"CATEGORY-30","name":"Category 30","description":null,"created_at":"2024-06-13 21:53:10"}
+         * [2024-06-14 03:54:15] testing.INFO: {"id":"CATEGORY-31","name":"Category 31","description":null,"created_at":"2024-06-13 21:53:10"}
+         * [2024-06-14 03:54:15] testing.INFO: {"id":"CATEGORY-32","name":"Category 32","description":null,"created_at":"2024-06-13 21:53:10"}
+         * [2024-06-14 03:54:15] testing.INFO: {"id":"CATEGORY-33","name":"Category 33","description":null,"created_at":"2024-06-13 21:53:10"}
+         * [2024-06-14 03:54:15] testing.INFO: {"id":"CATEGORY-34","name":"Category 34","description":null,"created_at":"2024-06-13 21:53:10"}
+         * [2024-06-14 03:54:15] testing.INFO: {"id":"CATEGORY-35","name":"Category 35","description":null,"created_at":"2024-06-13 21:53:10"}
+         */
+
+    }
+
 }
